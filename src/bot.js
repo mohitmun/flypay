@@ -25,13 +25,55 @@ bot.onEvent = function(session, message) {
       break
   }
 }
+function formatName(user) {
+  if (!user) {
+    return "<Unknown>";
+  } else if (user.name) {
+    return user.name;
+  } else if (user.username) {
+    return "@" + user.username;
+  } else {
+    return "<Unknown>";
+  }
+}
 
 function onMessage(session, message) {
-  welcome(session)
+  // welcome(session)
+  amount = parseFloat(message.content.body)
+  messenger_link(session, amount)
+}
+
+function messenger_link(session, amount) {
+  mode = session.get("mode")
+  if (mode){
+    if(isNaN(amount)){
+      sendMessage(session, "Please enter valid amount");
+    }else{
+      sendMessage(session, `Click on the link and send it to your friend!! m.me/flypay1?ref=${mode}_${amount}_${formatName(session.user)}`)
+      session.set("mode", undefined)
+    }
+  }else{
+    welcome(session)
+  }
 }
 
 function onCommand(session, command) {
   switch (command.content.value) {
+    case 'send_fb':
+      send_fb(session)
+      break;
+    case 'request_fb':
+      request_fb(session)
+      break;
+    case 'USD5':
+      messenger_link(session, 5)
+      break;
+    case 'USD10':
+      messenger_link(session, 10)
+      break;
+    case 'USD15':
+      messenger_link(session, 15)
+      break;
     case 'ping':
       pong(session)
       break
@@ -69,11 +111,31 @@ function onPayment(session, message) {
 // STATES
 
 function welcome(session) {
-  sendMessage(session, `Hello Token!`)
+  sendMessage(session, `Hey ${formatName(session.user)}! FlyPay connects Token to other chatbots and acts as a bridge. So now you can request money to your facebook friends`, [
+    {type: 'button', label: 'Request money to FB friend', value: 'request_fb'},
+    {type: 'button', label: 'Send money to FB friend', value: 'send_fb'}
+  ])
 }
 
 function pong(session) {
   sendMessage(session, `Pong`)
+}
+
+function send_fb(session) {
+  sendMessage(session, `Please enter amount to send`, [
+    {type: 'button', label: '$5', value: 'USD5'},
+    {type: 'button', label: '$10', value: 'USD10'},
+    {type: 'button', label: '$15', value: 'USD15'}
+  ]);
+  session.set('mode', "send")
+}
+function request_fb(session) {
+  sendMessage(session, `Please enter amount to request`, [
+    {type: 'button', label: '$5', value: 'USD5'},
+    {type: 'button', label: '$10', value: 'USD10'},
+    {type: 'button', label: '$15', value: 'USD15'}
+  ]);
+  session.set('mode', "request")
 }
 
 // example of how to store state on each user
@@ -92,12 +154,7 @@ function donate(session) {
 
 // HELPERS
 
-function sendMessage(session, message) {
-  let controls = [
-    {type: 'button', label: 'Ping', value: 'ping'},
-    {type: 'button', label: 'Count', value: 'count'},
-    {type: 'button', label: 'Donate', value: 'donate'}
-  ]
+function sendMessage(session, message, controls) {
   session.reply(SOFA.Message({
     body: message,
     controls: controls,

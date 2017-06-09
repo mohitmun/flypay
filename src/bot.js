@@ -62,9 +62,23 @@ app.post('/fb', jsonParser,function (req, res) {
           if (event.message.is_echo){
 
           }else if (event.message.text.toLowerCase() == "ok"){
-            sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
-            sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
-            store[senderID]["read_username"] =  true
+            if (!store[senderID]["logged_in"]){
+
+              sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
+              sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
+              store[senderID]["read_username"] =  true
+            }else{
+              username = store[senderID]["username"]
+              if (username){
+                word = store[senderID]["mode"] == "send" ? "received" : "send"
+                amount = store[senderID]["amount"]
+                sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )
+                IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id, "Your facebook friend has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
+                store[senderID]["username"] = undefined
+              }else{
+                sendTextMessage(senderID, "Type 'send' or 'request' to continue")
+              }
+            }
           }else if (event.message.text.toLowerCase() == "no"){
             sendTextMessage(senderID, "Send us your preferred username") 
             store[senderID]["read_username"] =  true
@@ -240,6 +254,9 @@ function create_user(senderID, username){
       // if (store[senderID]["mode"] == "request"){
         username = store[senderID]["username"]
         if (username){
+          word = store[senderID]["mode"] == "send" ? "received" : "send"
+          amount = store[senderID]["amount"]
+          sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )
           IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id, "Your facebook friend has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
           store[senderID]["username"] = undefined
         }

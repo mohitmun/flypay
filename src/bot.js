@@ -73,7 +73,7 @@ app.post('/fb', jsonParser,function (req, res) {
                 word = store[senderID]["mode"] == "send" ? "received" : "send"
                 amount = store[senderID]["amount"]
                 sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )
-                IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id, "Your facebook friend has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
+                IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + "has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
                 store[senderID]["username"] = undefined
               }else{
                 sendTextMessage(senderID, "Type 'send' or 'request' to continue")
@@ -257,7 +257,7 @@ function create_user(senderID, username){
           word = store[senderID]["mode"] == "send" ? "received" : "send"
           amount = store[senderID]["amount"]
           sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )
-          IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id, "Your facebook friend has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
+          IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + "has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
           store[senderID]["username"] = undefined
         }
       // }

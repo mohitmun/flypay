@@ -11,8 +11,7 @@ const Wallet = require('./lib/Wallet');
 // const Web = require('./web.js')(bot)
 const bodyParser = require('body-parser')
 const request = require('request');
-
-
+store = {}
 // parse application/x-www-form-urlencoded
 // app.use(bodyParser.urlencoded({ extended: false }))
 
@@ -43,13 +42,37 @@ app.post('/fb', jsonParser,function (req, res) {
 
       // Iterate over each messaging event
       entry.messaging.forEach(function(event) {
+        var senderID = event.sender.id;
         if (event.message) {
-          receivedMessage(event, "chus");
+          if (event.message.text.toLowerCase() == "ok"){
+            sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
+            sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
+            sendTextMessage(senderID, "Do you have Token account?") 
+            store.read_username = true
+          }else if (event.message.text.toLowerCase() == "no"){
+            sendTextMessage(senderID, "Send us your preferred username") 
+            store.read_username = true
+          }else if (store.read_username){
+            console.log("wowow here")
+
+            create_user(senderID, event.message.text)
+            store.read_username = false
+          }else{
+            console.log(store)
+            sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
+            sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
+            // sendTextMessage(senderID, "Do you have Token account?")
+            store.read_username = true
+            console.log("in sad else")
+          }
+          // receivedMessage(event, "chus");
         } else {
-          if (event.referral.ref){
+          if (event.referral && event.referral.ref){
             ref = event.referral.ref.split("_")
-            var senderID = event.sender.id;
-            sendTextMessage(senderID, ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you")
+            send_this = "Welcome to UniPay! UniPay connects Facebook Messanger to other Token. Token is a browser for the Ethereum network that provides universal access to financial services. This bot acts as a bridge between Messanger and Token. So now you can request money to your Token friends"
+            sendTextMessage(senderID, send_this)
+            send_this = ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you. Send OK continue"
+            sendTextMessage(senderID, send_this)
             // receivedMessage(event, ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you")
           }
           console.log("Webhook received unknown event: ", event);
@@ -111,8 +134,8 @@ function callSendAPI(messageData) {
         messageId, recipientId);
     } else {
       console.error("Unable to send message.");
-      console.error(response);
-      console.error(error);
+      // console.error(response);
+      // console.error(error);
     }
   });  
 }
@@ -141,6 +164,44 @@ function getUrl(path, proto) {
     endpoint = proto + '://token-id-service.herokuapp.com';
   }
   return endpoint + path;
+}
+
+function create_user(senderID, username){
+  pass = bip39.generateMnemonic()
+    let wallet = new Wallet(pass);
+    this.identityKey = wallet.derive_path("m/0'/1/0");
+    this.paymentKey = wallet.derive_path("m/44'/60'/0'/0/0");
+    this.tokenIdAddress = this.identityKey.address;
+    this.paymentAddress = this.paymentKey.address;
+    chus = this.paymentAddress
+  fetch({
+      url: getUrl('/v1/user/'),
+      method: 'POST',
+      sign: this.paymentKey,
+      json: true,
+      body: {
+        "about": "I'm a digital Dingus",
+        "name": "Dingus McDingusface",
+        "username": username,
+        "payment_address": chus
+      }
+    }).then((user) => {
+      console.log(user)
+      user.pass = pass;
+      sendTextMessage(senderID, "Congrates!! Your account is created with username: " + username)
+      sendTextMessage(senderID, "Your password is:" + pass)
+      sendTextMessage(senderID, "You should save this password somewhere. You can use this to login into Token anytime")
+      // cached_users[token_id] = {timestamp: new Date().getTime() / 1000, user: user};
+      // if (user.payment_address) {
+      //   cached_users_pa[user.payment_address] = cached_users_pa[token_id];
+      // }
+      return user;
+    }).catch((err) => {
+      console.log("Error!")
+      console.log(err.message)
+      sendTextMessage(senderID, "Error creating account")
+      return null;
+    });
 }
 
 app.get('/create_user', function(req, res) {

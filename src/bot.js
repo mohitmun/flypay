@@ -1,8 +1,27 @@
 const Bot = require('./lib/Bot')
+let bot = new Bot()
 const SOFA = require('sofa-js')
 const Fiat = require('./lib/Fiat')
+const express = require('express')
+const app = express()
+const IdService = require('./lib/IdService')
+// const Web = require('./web.js')(bot)
 
-let bot = new Bot()
+app.get('/', function (req, res) {
+  res.send('Hello World!')
+})
+
+app.get('/send_message', function (req, res) {
+  console.log("paeams: " + req.query)
+  console.log(req.query)
+  IdService.getUser(req.query.username).then((user) => { console.log(user); bot.client.send(user.token_id, req.query.message) });
+  // bot.client.send(userID, message)
+  res.send('Hello World!')
+})
+
+app.listen(8000, function () {
+  console.log('Example app listening on port 8000!')
+})
 
 // ROUTING
 
@@ -49,7 +68,10 @@ function messenger_link(session, amount) {
     if(isNaN(amount)){
       sendMessage(session, "Please enter valid amount");
     }else{
-      sendMessage(session, `Click on the link and send it to your friend!! m.me/flypay1?ref=${mode}_${amount}_${formatName(session.user)}`)
+      // sendMessage(session, `Click on the link and send it to your friend!! m.me/flypay1?ref=${mode}_${amount}_${formatName(session.user)}`)
+      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://bee89051.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
+        // {type: 'button', label: 'Confirm', action: `Webview::https://bee89051.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`}
+        ])
       session.set("mode", undefined)
     }
   }else{
@@ -111,11 +133,9 @@ function onPayment(session, message) {
 // STATES
 
 function welcome(session) {
-  sendMessage(session, `Hey ${formatName(session.user)}! FlyPay connects Token to other chatbots and acts as a bridge. So now you fb-messenger://share/?link= https%3A%2F%2Fdevelopers.facebook.com%2Fdocs%2Fsharing%2Freference%2Fsend-dialog&app_id=123456789 can request money to your facebook friends`, [
+  sendMessage(session, `Hey ${formatName(session.user)}! FlyPay connects Token to other chatbots and acts as a bridge. So now you can request money to your facebook friends`, [
     {type: 'button', label: 'Request money to FB friend', value: 'request_fb'},
-    {type: 'button', label: 'Send money to FB friend', value: 'send_fb'},
-    // {type: 'button', label: 'Mess', action: 'Webiew::https://bee89051.ngrok.io/fb_share'}
-    {type: 'button', label: 'Mess', action: 'Webiew::https://google.com'}
+    {type: 'button', label: 'Send money to FB friend', value: 'send_fb'}
   ])
 }
 

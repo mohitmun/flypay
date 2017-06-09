@@ -104,7 +104,7 @@ app.post('/fb', jsonParser,function (req, res) {
             IdService.getUser(username).then((user) => { console.log(user); bot.client.send( user.token_id, "You have received $"+ store[senderID]["token_amount"]  + " from " + store[senderID]["info"]["first_name"]) });
             store[senderID]["read_amount"] =  false
             store[senderID]["read_token_username"] =  false
-
+            sendTextMessage(senderID, username + " has received $" + store[senderID]["token_amount"] + " from you")
           }else if (store[senderID].read_username){
             console.log("wowow here")
 
@@ -118,7 +118,7 @@ app.post('/fb', jsonParser,function (req, res) {
             }else{
               // sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
               // sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
-              send_this = "Welcome to UniPay! UniPay connects Facebook Messanger to other Token. Token is a browser for the Ethereum network that provides universal access to financial services. This bot acts as a bridge between Messanger and Token. So now you can request money to your Token friends"
+              send_this = "Welcome to UniPay! UniPay connects Facebook Messanger to other Token. Token is a browser for the Ethereum network that provides universal access to financial services. This bot acts as a bridge between Messanger and Token. So now you can request money to your Token friends."
               sendTextMessage(senderID, send_this)
               // sendTextMessage(senderID, "Do you have Token account?")
             }

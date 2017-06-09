@@ -52,7 +52,7 @@ app.post('/fb', jsonParser,function (req, res) {
             if (!error && response.statusCode == 200) {
               console.log("store set")
               console.log(store)
-              store[senderID]["info"] =  body
+              store[senderID]["info"] =  JSON.parse(body)
             } else {
               console.log("unable to user infos.");
               // console.error(response);

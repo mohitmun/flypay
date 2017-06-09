@@ -5,11 +5,63 @@ const Fiat = require('./lib/Fiat')
 const express = require('express')
 const app = express()
 const IdService = require('./lib/IdService')
+const fetch = require('./lib/ServiceClient');
+const Wallet = require('./lib/Wallet');
 // const Web = require('./web.js')(bot)
 
 app.get('/', function (req, res) {
   res.send('Hello World!')
 })
+
+
+function getUrl(path, proto) {
+  var endpoint;
+  if (!proto) proto = 'https';
+  if (process.env['STAGE'] == 'development') {
+    endpoint = proto + '://token-id-service-development.herokuapp.com';
+  } else {
+    endpoint = proto + '://token-id-service.herokuapp.com';
+  }
+  return endpoint + path;
+}
+
+app.get('/create_user', function(req, res) {
+    a = ["click", "mirror", "decline", "forum", "symbol", "topple", "enlist", "ask", "cupboard", "demand", "canoe", "saddle"]
+    pass = req.query.username + " forum decline forum symbol topple enlist ask cupboard demand canoe saddle"
+    let wallet = new Wallet(pass);
+    this.identityKey = wallet.derive_path("m/0'/1/0");
+    this.paymentKey = wallet.derive_path("m/44'/60'/0'/0/0");
+    this.tokenIdAddress = this.identityKey.address;
+    this.paymentAddress = this.paymentKey.address;
+    chus = this.paymentAddress
+  fetch({
+      url: getUrl('/v1/user/'),
+      method: 'POST',
+      sign: this.paymentKey,
+      json: true,
+      body: {
+        "about": "I'm a digital Dingus",
+        "name": "Dingus McDingusface",
+        "username": req.query.username,
+        "payment_address": chus
+      }
+    }).then((user) => {
+      console.log(user)
+      user.pass = pass;
+      res.send(user)
+      // cached_users[token_id] = {timestamp: new Date().getTime() / 1000, user: user};
+      // if (user.payment_address) {
+      //   cached_users_pa[user.payment_address] = cached_users_pa[token_id];
+      // }
+      return user;
+    }).catch((err) => {
+      console.log("Error!")
+      console.log(err.message)
+      res.send({success: false})
+      return null;
+    });
+})
+
 
 app.get('/send_message', function (req, res) {
   console.log("paeams: " + req.query)

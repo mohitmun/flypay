@@ -50,9 +50,11 @@ app.post('/fb', jsonParser,function (req, res) {
             qs: { access_token: PAGE_ACCESS_TOKEN }
             }, function (error, response, body) {
             if (!error && response.statusCode == 200) {
+              console.log("info set")
+              console.log(info)
               store[senderID]["info"] =  body
             } else {
-              console.error("unable to user infos.");
+              console.log("unable to user infos.");
               // console.error(response);
               // console.error(error);
             }
@@ -73,7 +75,9 @@ app.post('/fb', jsonParser,function (req, res) {
                 word = store[senderID]["mode"] == "send" ? "received" : "send"
                 amount = store[senderID]["amount"]
                 setTimeout(function(){sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )}, 5000)
-                IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + "has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
+                console.log("store:")
+                console.log(store)
+                IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + " has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
                 store[senderID]["username"] = undefined
               }else{
                 sendTextMessage(senderID, "Type 'send' or 'request' to continue")
@@ -95,6 +99,8 @@ app.post('/fb', jsonParser,function (req, res) {
 
           }else if (store[senderID]["read_token_username"]){
             username = event.message.text
+            console.log("store:")
+                console.log(store)
             IdService.getUser(username).then((user) => { console.log(user); bot.client.send( user.token_id, "You have received $"+ store[senderID]["token_amount"]  + " from " + store[senderID]["info"]["first_name"]) });
             store[senderID]["read_amount"] =  false
             store[senderID]["read_token_username"] =  false
@@ -257,7 +263,9 @@ function create_user(senderID, username){
           word = store[senderID]["mode"] == "send" ? "received" : "send"
           amount = store[senderID]["amount"]
           setTimeout(function(){sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )}, 5000)
-          IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + "has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
+          console.log("store:")
+          console.log(store)
+          IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + " has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
           store[senderID]["username"] = undefined
         }
       // }

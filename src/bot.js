@@ -43,36 +43,51 @@ app.post('/fb', jsonParser,function (req, res) {
       // Iterate over each messaging event
       entry.messaging.forEach(function(event) {
         var senderID = event.sender.id;
+        if (!store[senderID]){
+          store[senderID] = {}
+        }
         if (event.message) {
+          if (event.message.is_echo){
+
+          }else
           if (event.message.text.toLowerCase() == "ok"){
             sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
             sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
-            sendTextMessage(senderID, "Do you have Token account?") 
-            store.read_username = true
+            store[senderID]["read_username"] =  true
           }else if (event.message.text.toLowerCase() == "no"){
             sendTextMessage(senderID, "Send us your preferred username") 
-            store.read_username = true
-          }else if (store.read_username){
+            store[senderID]["read_username"] =  true
+          }else if (store[senderID].read_username){
             console.log("wowow here")
 
             create_user(senderID, event.message.text)
-            store.read_username = false
+            store[senderID]["read_username"] =  false
           }else{
             console.log(store)
-            sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
-            sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
-            // sendTextMessage(senderID, "Do you have Token account?")
-            store.read_username = true
-            console.log("in sad else")
+            if (store[senderID]["logged_in"]){
+              sendTextMessage(senderID, "Type 'send' or 'request' to continue")
+            }else{
+              // sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
+              // sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
+              send_this = "Welcome to UniPay! UniPay connects Facebook Messanger to other Token. Token is a browser for the Ethereum network that provides universal access to financial services. This bot acts as a bridge between Messanger and Token. So now you can request money to your Token friends"
+              sendTextMessage(senderID, send_this)
+              // sendTextMessage(senderID, "Do you have Token account?")
+            }
           }
           // receivedMessage(event, "chus");
         } else {
           if (event.referral && event.referral.ref){
             ref = event.referral.ref.split("_")
-            send_this = "Welcome to UniPay! UniPay connects Facebook Messanger to other Token. Token is a browser for the Ethereum network that provides universal access to financial services. This bot acts as a bridge between Messanger and Token. So now you can request money to your Token friends"
-            sendTextMessage(senderID, send_this)
+            mode = ref[0]
+            amount = ref[1]
+            username = ref[2]
+            // send_this = "Welcome to UniPay! UniPay connects Facebook Messanger to other Token. Token is a browser for the Ethereum network that provides universal access to financial services. This bot acts as a bridge between Messanger and Token. So now you can request money to your Token friends"
+            // sendTextMessage(senderID, send_this)
             send_this = ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you. Send OK continue"
             sendTextMessage(senderID, send_this)
+            store[senderID]["mode"] = mode
+            store[senderID]["amount"] = amount
+            store[senderID]["username"] = username
             // receivedMessage(event, ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you")
           }
           console.log("Webhook received unknown event: ", event);
@@ -167,6 +182,7 @@ function getUrl(path, proto) {
 }
 
 function create_user(senderID, username){
+  console.log("CREATING USER: " + username)
   pass = bip39.generateMnemonic()
     let wallet = new Wallet(pass);
     this.identityKey = wallet.derive_path("m/0'/1/0");
@@ -191,6 +207,11 @@ function create_user(senderID, username){
       sendTextMessage(senderID, "Congrates!! Your account is created with username: " + username)
       sendTextMessage(senderID, "Your password is:" + pass)
       sendTextMessage(senderID, "You should save this password somewhere. You can use this to login into Token anytime")
+      store[senderID]["logged_in"] = true
+      if (store[senderID]["mode"] == "request"){
+        username = store[senderID]["username"]
+        IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id, "Your facebook friend has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
+      }
       // cached_users[token_id] = {timestamp: new Date().getTime() / 1000, user: user};
       // if (user.payment_address) {
       //   cached_users_pa[user.payment_address] = cached_users_pa[token_id];
@@ -300,8 +321,8 @@ function messenger_link(session, amount) {
     }else{
       // sendMessage(session, `Click on the link and send it to your friend!! m.me/flypay1?ref=${mode}_${amount}_${formatName(session.user)}`)
       // domain = "becf29d2.ngrok.io"
-      domain = "uni-pay.herokuapp.com/"
-      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://${domain}/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
+      domain = "uni-pay.herokuapp.com"
+      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://${domain}/fb_share?amount=${amount}&from=${session.user.username}&mode=${mode}`, [
         // {type: 'button', label: 'Confirm', action: `Webview::https://bee89051.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`}
         ])
       session.set("mode", undefined)

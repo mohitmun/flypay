@@ -50,8 +50,8 @@ app.post('/fb', jsonParser,function (req, res) {
             qs: { access_token: PAGE_ACCESS_TOKEN }
             }, function (error, response, body) {
             if (!error && response.statusCode == 200) {
-              console.log("info set")
-              console.log(info)
+              console.log("store set")
+              console.log(store)
               store[senderID]["info"] =  body
             } else {
               console.log("unable to user infos.");

@@ -30,7 +30,6 @@ app.get('/fb', function (req, res) {
 
 app.post('/fb', jsonParser,function (req, res) {
   data = req.body;
-  console.log(data.body)
   // console.log(req)
   // // Make sure this is a page subscription
   if (data.object === 'page') {
@@ -45,24 +44,54 @@ app.post('/fb', jsonParser,function (req, res) {
         var senderID = event.sender.id;
         if (!store[senderID]){
           store[senderID] = {}
+          request({
+            uri: 'https://graph.facebook.com/v2.6/' + senderID,
+            method: "GET",
+            qs: { access_token: PAGE_ACCESS_TOKEN }
+            }, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+              store[senderID]["info"] =  body
+            } else {
+              console.error("unable to user infos.");
+              // console.error(response);
+              // console.error(error);
+            }
+          }); 
         }
         if (event.message) {
           if (event.message.is_echo){
 
-          }else
-          if (event.message.text.toLowerCase() == "ok"){
+          }else if (event.message.text.toLowerCase() == "ok"){
             sendTextMessage(senderID, "Send preferred username if you dont have account else send your  registered Username")    
             sendTextMessage(senderID, "If you dont have account, dont worry we will crete it for you.")    
             store[senderID]["read_username"] =  true
           }else if (event.message.text.toLowerCase() == "no"){
             sendTextMessage(senderID, "Send us your preferred username") 
             store[senderID]["read_username"] =  true
+          }else if (event.message.text.toLowerCase() == "send" || event.message.text.toLowerCase() == "request"){
+            sendTextMessage(senderID, "Enter amount") 
+            store[senderID]["read_amount"] =  true
+            store[senderID]["token_mode"] =  event.message.text
+
+          }else if (store[senderID]["read_amount"]){
+            sendTextMessage(senderID, "Enter your friends token username") 
+            store[senderID]["read_amount"] =  false
+            store[senderID]["token_amount"] = event.message.text
+            store[senderID]["read_token_username"] =  true
+
+          }else if (store[senderID]["read_token_username"]){
+            username = event.message.text
+            IdService.getUser(username).then((user) => { console.log(user); bot.client.send( user.token_id, "You have received $"+ store[senderID]["token_amount"]  + " from " + store[senderID]["info"]["first_name"]) });
+            store[senderID]["read_amount"] =  false
+            store[senderID]["read_token_username"] =  false
+
           }else if (store[senderID].read_username){
             console.log("wowow here")
 
             create_user(senderID, event.message.text)
             store[senderID]["read_username"] =  false
           }else{
+            console.log("store:")
             console.log(store)
             if (store[senderID]["logged_in"]){
               sendTextMessage(senderID, "Type 'send' or 'request' to continue")
@@ -90,7 +119,7 @@ app.post('/fb', jsonParser,function (req, res) {
             store[senderID]["username"] = username
             // receivedMessage(event, ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you")
           }
-          console.log("Webhook received unknown event: ", event);
+          // console.log("Webhook received unknown event: ", event);
         }
       });
     });
@@ -103,22 +132,22 @@ app.post('/fb', jsonParser,function (req, res) {
   }
 });
 
-function receivedMessage(event, send_this_message) {
-  var senderID = event.sender.id;
-  var recipientID = event.recipient.id;
-  var timeOfMessage = event.timestamp;
-  var message = event.message;
+// function receivedMessage(event, send_this_message) {
+//   var senderID = event.sender.id;
+//   var recipientID = event.recipient.id;
+//   var timeOfMessage = event.timestamp;
+//   var message = event.message;
 
-  console.log("Received message for user %d and page %d at %d with message:", 
-    senderID, recipientID, timeOfMessage);
-  console.log(JSON.stringify(message));
+//   console.log("Received message for user %d and page %d at %d with message:", 
+//     senderID, recipientID, timeOfMessage);
+//   console.log(JSON.stringify(message));
 
-  // var messageId = message.mid;
+//   // var messageId = message.mid;
 
-  var messageText = message.text;
-  var messageAttachments = message.attachments;
-  sendTextMessage(senderID, send_this_message)
-}
+//   var messageText = message.text;
+//   var messageAttachments = message.attachments;
+//   sendTextMessage(senderID, send_this_message)
+// }
 
 function sendTextMessage(recipientId, messageText) {
   var messageData = {
@@ -202,16 +231,19 @@ function create_user(senderID, username){
         "payment_address": chus
       }
     }).then((user) => {
-      console.log(user)
+      
       user.pass = pass;
       sendTextMessage(senderID, "Congrates!! Your account is created with username: " + username)
       sendTextMessage(senderID, "Your password is:" + pass)
       sendTextMessage(senderID, "You should save this password somewhere. You can use this to login into Token anytime")
       store[senderID]["logged_in"] = true
-      if (store[senderID]["mode"] == "request"){
+      // if (store[senderID]["mode"] == "request"){
         username = store[senderID]["username"]
-        IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id, "Your facebook friend has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
-      }
+        if (username){
+          IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id, "Your facebook friend has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
+          store[senderID]["username"] = undefined
+        }
+      // }
       // cached_users[token_id] = {timestamp: new Date().getTime() / 1000, user: user};
       // if (user.payment_address) {
       //   cached_users_pa[user.payment_address] = cached_users_pa[token_id];

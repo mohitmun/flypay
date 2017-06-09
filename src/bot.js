@@ -9,10 +9,120 @@ const IdService = require('./lib/IdService')
 const fetch = require('./lib/ServiceClient');
 const Wallet = require('./lib/Wallet');
 // const Web = require('./web.js')(bot)
+const bodyParser = require('body-parser')
+const request = require('request');
+
+
+// parse application/x-www-form-urlencoded
+// app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
+
+// app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
 app.get('/', function (req, res) {
-  res.send('Hello World!')
+  res.send(req.query)
 })
+var jsonParser = bodyParser.json();
+app.get('/fb', function (req, res) {
+  res.send(req.query["hub.challenge"])
+});
+
+app.post('/fb', jsonParser,function (req, res) {
+  data = req.body;
+  // console.log(data.body)
+  // console.log(req)
+  // // Make sure this is a page subscription
+  if (data.object === 'page') {
+
+    // Iterate over each entry - there may be multiple if batched
+    data.entry.forEach(function(entry) {
+      var pageID = entry.id;
+      var timeOfEvent = entry.time;
+
+      // Iterate over each messaging event
+      entry.messaging.forEach(function(event) {
+        if (event.message) {
+          receivedMessage(event);
+        } else {
+          console.log("Webhook received unknown event: ", event);
+        }
+      });
+    });
+    res.send("200");
+    // Assume all went well.
+    //
+    // You must send back a 200, within 20 seconds, to let us know
+    // you've successfully received the callback. Otherwise, the request
+    // will time out and we will keep trying to resend.
+  }
+});
+
+function receivedMessage(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfMessage = event.timestamp;
+  var message = event.message;
+
+  console.log("Received message for user %d and page %d at %d with message:", 
+    senderID, recipientID, timeOfMessage);
+  console.log(JSON.stringify(message));
+
+  var messageId = message.mid;
+
+  var messageText = message.text;
+  var messageAttachments = message.attachments;
+  sendTextMessage(senderID, "chus")
+}
+
+function sendTextMessage(recipientId, messageText) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: messageText
+    }
+  };
+
+  callSendAPI(messageData);
+}
+PAGE_ACCESS_TOKEN = "EAAPC4QdkoKsBAJ3AKL3ZBfJDdQMb6WxbXaKiE0GUbh5ZAgD1RN5orUAVhoKXG6l4eZCBAVx3k5phP8DLrAzSScZAexPL7QCZANRkv3LWKY069UelV7tXHnpLhsXVKmEp21PfZAdBAwgrJd8rCOKZBT4MS8oGOOhLL2h2vFyh5GMSHgJCxnLTwFo"
+function callSendAPI(messageData) {
+  request({
+    uri: 'https://graph.facebook.com/v2.6/me/messages',
+    qs: { access_token: PAGE_ACCESS_TOKEN },
+    method: 'POST',
+    json: messageData
+
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      var recipientId = body.recipient_id;
+      var messageId = body.message_id;
+
+      console.log("Successfully sent generic message with id %s to recipient %s", 
+        messageId, recipientId);
+    } else {
+      console.error("Unable to send message.");
+      console.error(response);
+      console.error(error);
+    }
+  });  
+}
+app.get('/fb_share', function (req, res) {
+  s = '<head> <meta name="viewport" content="width=device-width, initial-scale=1"></head>\
+  <div style="text-align: center;">\
+<div style="width:100%; margin: 0 auto;">\
+  After Clicking on below link, choose the friend(s) you want to ' + req.query.mode + '\
+</div>\
+<a style="width: 100%; margin: 0 auto; display: block;" href="fb-messenger://share/?link=http://m.me/flypay1" >  Open Messanger</a>\
+</div>'
+  res.send(s)
+})
+
+
+
 
 
 function getUrl(path, proto) {
@@ -121,7 +231,7 @@ function messenger_link(session, amount) {
       sendMessage(session, "Please enter valid amount");
     }else{
       // sendMessage(session, `Click on the link and send it to your friend!! m.me/flypay1?ref=${mode}_${amount}_${formatName(session.user)}`)
-      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://bee89051.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
+      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://becf29d2.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
         // {type: 'button', label: 'Confirm', action: `Webview::https://bee89051.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`}
         ])
       session.set("mode", undefined)

@@ -31,7 +31,7 @@ app.get('/fb', function (req, res) {
 
 app.post('/fb', jsonParser,function (req, res) {
   data = req.body;
-  // console.log(data.body)
+  console.log(data.body)
   // console.log(req)
   // // Make sure this is a page subscription
   if (data.object === 'page') {
@@ -111,12 +111,13 @@ function callSendAPI(messageData) {
   });  
 }
 app.get('/fb_share', function (req, res) {
+  fb_ref = req.query
   s = '<head> <meta name="viewport" content="width=device-width, initial-scale=1"></head>\
   <div style="text-align: center;">\
 <div style="width:100%; margin: 0 auto;">\
   After Clicking on below link, choose the friend(s) you want to ' + req.query.mode + '\
 </div>\
-<a style="width: 100%; margin: 0 auto; display: block;" href="fb-messenger://share/?link=http://m.me/flypay1" >  Open Messanger</a>\
+<a style="width: 100%; margin: 0 auto; display: block;" href="fb-messenger://share/?link=http://m.me/flypay1?ref='+fb_ref +'" >  Open Messanger</a>\
 </div>'
   res.send(s)
 })
@@ -231,7 +232,7 @@ function messenger_link(session, amount) {
       sendMessage(session, "Please enter valid amount");
     }else{
       // sendMessage(session, `Click on the link and send it to your friend!! m.me/flypay1?ref=${mode}_${amount}_${formatName(session.user)}`)
-      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://becf29d2.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
+      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://uni-pay.herokuapp.com/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
         // {type: 'button', label: 'Confirm', action: `Webview::https://bee89051.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`}
         ])
       session.set("mode", undefined)

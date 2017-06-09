@@ -1,5 +1,6 @@
 const Bot = require('./lib/Bot')
 let bot = new Bot()
+ const bip39 = require('bip39');
 const SOFA = require('sofa-js')
 const Fiat = require('./lib/Fiat')
 const express = require('express')
@@ -26,8 +27,7 @@ function getUrl(path, proto) {
 }
 
 app.get('/create_user', function(req, res) {
-    a = ["click", "mirror", "decline", "forum", "symbol", "topple", "enlist", "ask", "cupboard", "demand", "canoe", "saddle"]
-    pass = req.query.username + " forum decline forum symbol topple enlist ask cupboard demand canoe saddle"
+    pass = bip39.generateMnemonic()
     let wallet = new Wallet(pass);
     this.identityKey = wallet.derive_path("m/0'/1/0");
     this.paymentKey = wallet.derive_path("m/44'/60'/0'/0/0");

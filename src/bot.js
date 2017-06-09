@@ -104,7 +104,7 @@ app.post('/fb', jsonParser,function (req, res) {
             IdService.getUser(username).then((user) => { console.log(user); bot.client.send( user.token_id, "You have received $"+ store[senderID]["token_amount"]  + " from " + store[senderID]["info"]["first_name"]) });
             store[senderID]["read_amount"] =  false
             store[senderID]["read_token_username"] =  false
-            sendTextMessage(senderID, username + " has received $" + store[senderID]["token_amount"] + " from you")
+            sendTextMessage(senderID, username + " has received USD" + store[senderID]["token_amount"] + " from you")
           }else if (store[senderID].read_username){
             console.log("wowow here")
 

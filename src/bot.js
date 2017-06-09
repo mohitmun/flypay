@@ -44,8 +44,14 @@ app.post('/fb', jsonParser,function (req, res) {
       // Iterate over each messaging event
       entry.messaging.forEach(function(event) {
         if (event.message) {
-          receivedMessage(event);
+          receivedMessage(event, "chus");
         } else {
+          if (event.referral.ref){
+            ref = event.referral.ref.split("_")
+            var senderID = event.sender.id;
+            sendTextMessage(senderID, ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you")
+            // receivedMessage(event, ref[2] + " has " + ref[0] + " " + "$" + ref[1] +  " money to you")
+          }
           console.log("Webhook received unknown event: ", event);
         }
       });
@@ -59,7 +65,7 @@ app.post('/fb', jsonParser,function (req, res) {
   }
 });
 
-function receivedMessage(event) {
+function receivedMessage(event, send_this_message) {
   var senderID = event.sender.id;
   var recipientID = event.recipient.id;
   var timeOfMessage = event.timestamp;
@@ -69,11 +75,11 @@ function receivedMessage(event) {
     senderID, recipientID, timeOfMessage);
   console.log(JSON.stringify(message));
 
-  var messageId = message.mid;
+  // var messageId = message.mid;
 
   var messageText = message.text;
   var messageAttachments = message.attachments;
-  sendTextMessage(senderID, "chus")
+  sendTextMessage(senderID, send_this_message)
 }
 
 function sendTextMessage(recipientId, messageText) {
@@ -111,13 +117,13 @@ function callSendAPI(messageData) {
   });  
 }
 app.get('/fb_share', function (req, res) {
-  fb_ref = req.query
+  fb_ref = `${req.query.mode}_${req.query.amount}_${req.query.from}`
   s = '<head> <meta name="viewport" content="width=device-width, initial-scale=1"></head>\
   <div style="text-align: center;">\
 <div style="width:100%; margin: 0 auto;">\
   After Clicking on below link, choose the friend(s) you want to ' + req.query.mode + '\
 </div>\
-<a style="width: 100%; margin: 0 auto; display: block;" href="fb-messenger://share/?link=http://m.me/flypay1?ref='+fb_ref +'" >  Open Messanger</a>\
+<a style="width: 100%; margin: 0 auto; display: block;" href="fb-messenger://share/?link=messenger.com/t/unipaytoken?ref='+fb_ref +'" >  Open Messanger</a>\
 </div>'
   res.send(s)
 })
@@ -213,7 +219,7 @@ function formatName(user) {
   } else if (user.name) {
     return user.name;
   } else if (user.username) {
-    return "@" + user.username;
+    return  user.username;
   } else {
     return "<Unknown>";
   }
@@ -232,7 +238,9 @@ function messenger_link(session, amount) {
       sendMessage(session, "Please enter valid amount");
     }else{
       // sendMessage(session, `Click on the link and send it to your friend!! m.me/flypay1?ref=${mode}_${amount}_${formatName(session.user)}`)
-      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://uni-pay.herokuapp.com/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
+      // domain = "becf29d2.ngrok.io"
+      domain = "uni-pay.herokuapp.com/"
+      sendMessage(session, `You are ${mode}ing $${amount} to your fb friend(s)!! Please click on below link https://${domain}/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`, [
         // {type: 'button', label: 'Confirm', action: `Webview::https://bee89051.ngrok.io/fb_share?amount=${amount}&from=${formatName(session.user)}&mode=${mode}`}
         ])
       session.set("mode", undefined)
@@ -296,7 +304,7 @@ function onPayment(session, message) {
 // STATES
 
 function welcome(session) {
-  sendMessage(session, `Hey ${formatName(session.user)}! FlyPay connects Token to other chatbots and acts as a bridge. So now you can request money to your facebook friends`, [
+  sendMessage(session, `Hey ${formatName(session.user)}! UniPay connects Token to other chatbots and acts as a bridge. So now you can request money to your facebook friends`, [
     {type: 'button', label: 'Request money to FB friend', value: 'request_fb'},
     {type: 'button', label: 'Send money to FB friend', value: 'send_fb'}
   ])

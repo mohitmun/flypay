@@ -6,8 +6,8 @@ services:
       - redis
       - postgres
     environment: &environment
-      - TOKEN_APP_SEED=
-      - TOKEN_APP_USERNAME=
+      - TOKEN_APP_SEED=menu stereo nation rocket gown soda kidney market ice among bomb pool
+      - TOKEN_APP_USERNAME=FlyPay
       - TOKEN_APP_NAME=
       - TOKEN_APP_AVATAR=
       - REDIS_URL=redis://h:rlcMWNrxXgqS0xM8aWCYuE0R@redis:6379

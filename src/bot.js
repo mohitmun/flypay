@@ -111,9 +111,11 @@ function onPayment(session, message) {
 // STATES
 
 function welcome(session) {
-  sendMessage(session, `Hey ${formatName(session.user)}! FlyPay connects Token to other chatbots and acts as a bridge. So now you can request money to your facebook friends`, [
+  sendMessage(session, `Hey ${formatName(session.user)}! FlyPay connects Token to other chatbots and acts as a bridge. So now you fb-messenger://share/?link= https%3A%2F%2Fdevelopers.facebook.com%2Fdocs%2Fsharing%2Freference%2Fsend-dialog&app_id=123456789 can request money to your facebook friends`, [
     {type: 'button', label: 'Request money to FB friend', value: 'request_fb'},
-    {type: 'button', label: 'Send money to FB friend', value: 'send_fb'}
+    {type: 'button', label: 'Send money to FB friend', value: 'send_fb'},
+    // {type: 'button', label: 'Mess', action: 'Webiew::https://bee89051.ngrok.io/fb_share'}
+    {type: 'button', label: 'Mess', action: 'Webiew::https://google.com'}
   ])
 }
 

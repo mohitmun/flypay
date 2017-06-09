@@ -1,3 +1,7 @@
+<!-- menu stereo nation rocket gown soda kidney market ice among bomb pool -->
+<!-- Token App Id: 0x9ceaa8e937b7956f51141088fa0b72750caf65cc
+
+Token App Payment Address: 0x5c6b7faaef0cea94e42a7f5736d172453649de33 -->
 # Token SOFA App
 
 This repo helps you build a [Token app](https://www.tokenbrowser.com) in Javascript.

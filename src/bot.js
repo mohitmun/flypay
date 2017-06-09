@@ -72,7 +72,7 @@ app.post('/fb', jsonParser,function (req, res) {
               if (username){
                 word = store[senderID]["mode"] == "send" ? "received" : "send"
                 amount = store[senderID]["amount"]
-                sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )
+                setTimeout(function(){sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )}, 5000)
                 IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + "has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
                 store[senderID]["username"] = undefined
               }else{
@@ -256,7 +256,7 @@ function create_user(senderID, username){
         if (username){
           word = store[senderID]["mode"] == "send" ? "received" : "send"
           amount = store[senderID]["amount"]
-          sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )
+          setTimeout(function(){sendTextMessage(senderID, "You have " + word + " " + amount + " in transaction with " + username )}, 5000)
           IdService.getUser(username).then((user) => { console.log(user); bot.client.send(user.token_id,  store[senderID]["info"]["first_name"] + "has completed the transaction");console.log("JORNY COMPLETE: sending to username:" + username); });
           store[senderID]["username"] = undefined
         }
